@@ -4,7 +4,6 @@ type Sharer struct {
 }
 
 func (here *Sharer) Init() {
-
 }
 
 func (here *Sharer) Send() {
