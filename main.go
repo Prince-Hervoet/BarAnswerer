@@ -1,11 +1,13 @@
 package main
 
 import (
-	"ShareMemTCP/core"
+	"ShareMemTCP/connection"
 )
 
 func main() {
-	sm := core.OpenShareMemory(4096)
-	test := make([]byte, 5)
-	sm.WriteShareMemory(test)
+	p := &connection.Pioneer{}
+	p.NetInit(2)
+	for {
+
+	}
 }
