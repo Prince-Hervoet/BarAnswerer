@@ -1,6 +1,8 @@
 package core
 
 type Sharer struct {
+	mineMemories  []int
+	otherMemories []int
 }
 
 func (here *Sharer) Init() {
