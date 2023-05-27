@@ -6,6 +6,6 @@ type InitProtocol struct {
 	NeedSize    int32
 }
 
-func (here *InitProtocol) ToByteArray() {
-
+func (here *InitProtocol) ToByteArray() []byte {
+	return nil
 }
