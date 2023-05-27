@@ -3,23 +3,31 @@ package main
 import (
 	"ShareMemTCP/core"
 	"fmt"
+	"time"
 )
 
 func main() {
-	sm := core.OpenShareMemory(21, 4096)
-	test := make([]byte, 10)
-	for i := 0; i < 10; i++ {
-		test[i] = byte(i)
-	}
-	err := sm.WriteShareMemory(test)
-	ans := sm.ReadShareMemory(10)
-	fmt.Print("ans: ")
-	for i := 0; i < len(ans); i++ {
-		fmt.Print(ans[i])
-		fmt.Print(" ")
-	}
-	fmt.Println()
+
+}
+
+func test1() {
+	sm, _, err := core.OpenShareMemory(4096)
 	if err != nil {
 		fmt.Println(err.Error())
+		return
 	}
+	test := make([]byte, 10)
+	for i := 0; i < len(test); i++ {
+		test[i] = byte(i)
+	}
+	sm.WriteShareMemory(test)
+
+	for true {
+		fmt.Println("wait...")
+		time.Sleep(2 * time.Second)
+	}
+}
+
+func test2() {
+	core.GetShareMemory(1, 4096)
 }

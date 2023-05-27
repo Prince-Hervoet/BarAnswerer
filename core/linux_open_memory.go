@@ -3,10 +3,11 @@ package core
 import (
 	"ShareMemTCP/util"
 	"errors"
-	"fmt"
 	"syscall"
 	"unsafe"
 )
+
+var keySeq uint32 = 1
 
 const (
 	IPC_CREATE = 00001000
@@ -29,18 +30,16 @@ type ShareMemory struct {
 }
 
 // 开辟一块内存块
-func OpenShareMemory(key int, cap int) *ShareMemory {
-	shmid, _, err := syscall.Syscall(syscall.SYS_SHMGET, uintptr(key), uintptr(112), IPC_CREATE|0666)
+func OpenShareMemory(cap int) (*ShareMemory, uint32, error) {
+	shmid, _, err := syscall.Syscall(syscall.SYS_SHMGET, uintptr(keySeq), uintptr(112), IPC_CREATE|0666)
+	keySeq += 1
 	if err != 0 {
-		fmt.Printf("open memory error: %s\n", err.Error())
-		return nil
+		return nil, 0, errors.New(err.Error())
 	}
 	shmaddr, _, err := syscall.Syscall(syscall.SYS_SHMAT, shmid, 0, 0)
 	if err != 0 {
-		fmt.Printf("syscall error, err: %v\n", err)
-		return nil
+		return nil, 0, errors.New(err.Error())
 	}
-	fmt.Println(shmaddr)
 	return &ShareMemory{
 		leftLimit:  shmaddr,
 		rightLimit: shmaddr + uintptr(cap),
@@ -48,7 +47,27 @@ func OpenShareMemory(key int, cap int) *ShareMemory {
 		tail:       shmaddr,
 		size:       0,
 		cap:        cap,
+	}, keySeq - 1, nil
+}
+
+func GetShareMemory(key uint32, cap int) (*ShareMemory, error) {
+	shmid, _, err := syscall.Syscall(syscall.SYS_SHMGET, uintptr(key), 0, 0666)
+	if err != 0 {
+		return nil, errors.New(err.Error())
 	}
+	shmaddr, _, err := syscall.Syscall(syscall.SYS_SHMAT, shmid, 0, 0)
+	if err != 0 {
+		return nil, errors.New(err.Error())
+	}
+	return &ShareMemory{
+		leftLimit:  shmaddr,
+		rightLimit: shmaddr + uintptr(cap),
+		head:       shmaddr,
+		tail:       shmaddr,
+		size:       0,
+		cap:        cap,
+	}, nil
+
 }
 
 func (here *ShareMemory) WriteShareMemory(data []byte) error {
