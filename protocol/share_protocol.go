@@ -28,6 +28,21 @@ func (here *ShareProtocol) ToByteArray() []byte {
 	return ans
 }
 
+func (here *ShareProtocol) FromByteArray(data []byte) {
+	if len(data) < 14 {
+		return
+	}
+	v1 := data[0]
+	v2 := data[1]
+	here.magicNumber = int8(v1)
+	here.messageType = int8(v2)
+
+	v3 := data[2:6]
+	here.payloadSize = util.BinaryArrayToInt32(v3)
+
+	here.payload = data[6:]
+}
+
 func (here *ShareProtocol) SetMageicNumber(value int8) *ShareProtocol {
 	here.messageType = value
 	return here

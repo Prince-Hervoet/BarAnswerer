@@ -10,18 +10,25 @@ import (
 
 const (
 	IPC_CREATE = 00001000
-	PAGE_SIZE  = 4096
 )
 
+// 共享内存数据结构
 type ShareMemory struct {
-	leftLimit  uintptr
+	// 左边界
+	leftLimit uintptr
+	// 右边界
 	rightLimit uintptr
-	head       uintptr
-	tail       uintptr
-	size       int
-	cap        int
+	// 头指针
+	head uintptr
+	// 尾指针
+	tail uintptr
+	// 当前大小
+	size int
+	// 总大小
+	cap int
 }
 
+// 开辟一块内存块
 func OpenShareMemory(key int, cap int) *ShareMemory {
 	shmid, _, err := syscall.Syscall(syscall.SYS_SHMGET, uintptr(key), uintptr(112), IPC_CREATE|0666)
 	if err != 0 {
@@ -68,7 +75,11 @@ func (here *ShareMemory) ReadShareMemory(len int) []byte {
 	ans := make([]byte, len)
 	for i := 0; i < ansLen; i++ {
 		ans[i] = *(*byte)(unsafe.Pointer(here.head))
-		here.head += 1
+		if here.head == here.rightLimit {
+			here.head = here.leftLimit
+		} else {
+			here.head += 1
+		}
 	}
 	here.size -= ansLen
 	return ans

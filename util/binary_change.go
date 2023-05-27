@@ -13,3 +13,7 @@ func Int64ToBinaryArray(number int64) []byte {
 	binary.BigEndian.PutUint64(ans, uint64(number))
 	return ans
 }
+
+func BinaryArrayToInt32(data []byte) int32 {
+	return int32(binary.BigEndian.Uint32(data))
+}

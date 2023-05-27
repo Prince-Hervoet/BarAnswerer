@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	sm := core.OpenShareMemory(87, 4096)
+	sm := core.OpenShareMemory(21, 4096)
 	test := make([]byte, 10)
 	for i := 0; i < 10; i++ {
 		test[i] = byte(i)
@@ -18,6 +18,7 @@ func main() {
 		fmt.Print(ans[i])
 		fmt.Print(" ")
 	}
+	fmt.Println()
 	if err != nil {
 		fmt.Println(err.Error())
 	}
