@@ -1,6 +1,11 @@
 package protocol
 
 type InitProtocol struct {
-	Version     int16
-	MagicNumber int16
+	MagicNumber int8
+	Version     int8
+	NeedSize    int32
+}
+
+func (here *InitProtocol) ToByteArray() {
+
 }
