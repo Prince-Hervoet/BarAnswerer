@@ -1,10 +1,9 @@
 package main
 
 import (
-	"ShareMemTCP/core"
+	"ShareMemTCP/memory"
 )
 
 func main() {
-	s := &core.Sharer{}
-	s.Open("asdf")
+	memory.Test1()
 }
