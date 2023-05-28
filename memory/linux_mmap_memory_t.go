@@ -5,7 +5,7 @@ import (
 )
 
 func Test1() {
-	msm := NewMmapShareMemory()
+	msm := NewMmapShareMemory(1)
 	msm.OpenFile("/test.txt", 2048)
 	msm.Mmap()
 	// mh := protocol.NewMemoryHeader(1, 123, 333)
@@ -16,7 +16,7 @@ func Test1() {
 }
 
 func Test2() {
-	msm := NewMmapShareMemory()
+	msm := NewMmapShareMemory(1)
 	msm.OpenFile("/test.txt", 2048)
 	msm.Mmap()
 	test := make([]byte, 10)

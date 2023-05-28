@@ -14,7 +14,7 @@ const (
 	// memory
 	MEM_FLAG_WORKING = 1
 	MEM_FLAG_COMMON  = 0
-	MEM_HEADER_SIZE  = 9
+	MEM_HEADER_SIZE  = 17
 
 	CLIENT = 0
 	SERVER = 1

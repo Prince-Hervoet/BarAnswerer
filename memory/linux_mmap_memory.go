@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"syscall"
-	"unsafe"
 )
 
 // 用于记录文件打开次数
@@ -21,30 +20,34 @@ const (
 // 映射内存数据结构
 type MmapShareMemory struct {
 	bufferHeader *protocol.MemoryHeader
+	selection    int8
 	filePath     string
 	file         *os.File
 	memoryPtr    []byte
-	startPtr     uintptr
 	cap          int32
 	size         int32
 	head         int32
 	tail         int32
 }
 
-func NewMmapShareMemory() *MmapShareMemory {
+func NewMmapShareMemory(selection int8) *MmapShareMemory {
 	return &MmapShareMemory{
+		selection:    selection,
 		filePath:     "",
 		file:         nil,
 		size:         util.MEM_HEADER_SIZE,
 		head:         util.MEM_HEADER_SIZE + 1,
 		tail:         util.MEM_HEADER_SIZE + 1,
 		cap:          0,
-		bufferHeader: protocol.NewMemoryHeader(0, 0, 0),
+		bufferHeader: protocol.NewMemoryHeader(0, 0, 0, 0, 0),
 	}
 }
 
 // 打开系统文件，准备作为mmap使用
 func (here *MmapShareMemory) OpenFile(filePath string, cap int32) error {
+	if here.selection != util.SERVER {
+		return errors.New("selection error")
+	}
 	if here.file != nil {
 		err := here.file.Close()
 		if err != nil {
@@ -68,6 +71,33 @@ func (here *MmapShareMemory) OpenFile(filePath string, cap int32) error {
 	return nil
 }
 
+func (here *MmapShareMemory) Link(filePath string, cap int32) error {
+	if here.selection != util.CLIENT {
+		return errors.New("selection error")
+	}
+	if here.file != nil {
+		err := here.file.Close()
+		if err != nil {
+			fmt.Println("close error")
+			return err
+		}
+		here.file = nil
+	}
+	finalPath := DEFAULT_TMP_PATH + filePath
+	file, err := os.OpenFile(finalPath, os.O_RDWR, 0666)
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	here.cap = cap
+	here.size = util.MEM_HEADER_SIZE
+	here.file = file
+	here.filePath = finalPath
+	here.grow(cap)
+	fileNameSeq += 1
+	return nil
+}
+
 // 将file指针指向的文件进行一个映射
 func (here *MmapShareMemory) Mmap() error {
 	bs, err := syscall.Mmap(int(here.file.Fd()), 0, int(here.cap), syscall.PROT_WRITE|syscall.PROT_READ, syscall.MAP_SHARED)
@@ -76,7 +106,6 @@ func (here *MmapShareMemory) Mmap() error {
 		return err
 	}
 	here.memoryPtr = bs
-	here.startPtr = uintptr(unsafe.Pointer(&bs[0]))
 	return nil
 }
 
@@ -102,7 +131,6 @@ func (here *MmapShareMemory) CancelMmap() error {
 	}
 	here.cap = 0
 	here.size = 0
-	here.startPtr = 0
 	here.memoryPtr = nil
 	err = here.file.Close()
 	here.file = nil
@@ -123,6 +151,8 @@ func (here *MmapShareMemory) ReadHeader() *protocol.MemoryHeader {
 	here.bufferHeader.FromByteArray(temp)
 	here.head = here.bufferHeader.Head
 	here.tail = here.bufferHeader.Tail
+	here.size = here.bufferHeader.Size
+	here.cap = here.bufferHeader.Cap
 	return here.bufferHeader
 }
 

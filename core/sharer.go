@@ -8,10 +8,6 @@ func (here *Sharer) Open(address string) {
 
 }
 
-func (here *Sharer) Link(filePath string) {
-
-}
-
 func (here *Sharer) Send() {
 
 }
