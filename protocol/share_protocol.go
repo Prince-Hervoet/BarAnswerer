@@ -11,7 +11,7 @@ type ShareProtocol struct {
 
 func NewShareProtocol() *ShareProtocol {
 	return &ShareProtocol{
-		magicNumber: MAGIC_NUMBER,
+		magicNumber: util.MAGIC_NUMBER,
 	}
 }
 

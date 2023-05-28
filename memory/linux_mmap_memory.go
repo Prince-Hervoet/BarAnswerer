@@ -1,6 +1,7 @@
-package core
+package memory
 
 import (
+	"ShareMemTCP/protocol"
 	"ShareMemTCP/util"
 	"errors"
 	"fmt"
@@ -9,25 +10,34 @@ import (
 	"unsafe"
 )
 
+var fileNameSeq int = 1
+
 const (
 	DEFAULT_TMP_PATH = "/tmp"
 )
 
 type MmapShareMemory struct {
+	filePath   string
 	file       *os.File
 	defaultPtr []byte
-	dataPtr    uintptr
+	startPtr   uintptr
 	cap        int
 	size       int
+	sendQueue  *ActionSection
+	getQueue   *ActionSection
 }
 
 func NewMmapShareMemory() *MmapShareMemory {
 	return &MmapShareMemory{
-		file: nil,
+		filePath: "",
+		file:     nil,
+		size:     0,
+		cap:      0,
 	}
 }
 
-func (here *MmapShareMemory) Init(filePath string, cap int) error {
+// 打开系统文件，准备作为mmap使用
+func (here *MmapShareMemory) OpenFile(filePath string, cap int) error {
 	if here.file != nil {
 		err := here.file.Close()
 		if err != nil {
@@ -39,15 +49,17 @@ func (here *MmapShareMemory) Init(filePath string, cap int) error {
 	finalPath := DEFAULT_TMP_PATH + filePath
 	file, err := os.OpenFile(finalPath, os.O_CREATE|os.O_RDWR, 0666)
 	if err != nil {
-		fmt.Println("open file error")
+		fmt.Println(err.Error())
 		return err
 	}
 	here.cap = cap
 	here.size = 0
 	here.file = file
+	here.Grow(cap)
 	return nil
 }
 
+// 将file指针指向的文件进行一个映射
 func (here *MmapShareMemory) RunMmap() error {
 	bs, err := syscall.Mmap(int(here.file.Fd()), 0, here.cap, syscall.PROT_WRITE|syscall.PROT_READ, syscall.MAP_SHARED)
 	if err != nil {
@@ -55,10 +67,22 @@ func (here *MmapShareMemory) RunMmap() error {
 		return err
 	}
 	here.defaultPtr = bs
-	here.dataPtr = uintptr(unsafe.Pointer(&bs[0]))
+	here.startPtr = uintptr(unsafe.Pointer(&bs[0]))
 	return nil
 }
 
+// 设置内部文件的大小，不能太大
+func (here *MmapShareMemory) Grow(size int) {
+	if info, _ := here.file.Stat(); info.Size() >= int64(size) {
+		return
+	}
+	err := here.file.Truncate(int64(size))
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+
+// 关闭映射（同时会关闭和删除文件）
 func (here *MmapShareMemory) CancelMmap() error {
 	if here.defaultPtr == nil {
 		return nil
@@ -67,16 +91,28 @@ func (here *MmapShareMemory) CancelMmap() error {
 	if err != nil {
 		return err
 	}
+	here.cap = 0
+	here.size = 0
+	here.startPtr = 0
+	here.defaultPtr = nil
 	err = here.file.Close()
 	here.file = nil
 	if err != nil {
 		return err
 	}
-	here.cap = 0
-	here.size = 0
-	here.dataPtr = 0
-	here.defaultPtr = nil
+	err = os.Remove(here.filePath)
+	here.filePath = ""
+	if err != nil {
+		return err
+	}
 	return nil
+}
+
+func (here *MmapShareMemory) ReadHeader() *protocol.MemoryHeaderProtocol {
+	header := &protocol.MemoryHeaderProtocol{}
+	temp := here.defaultPtr[0:10]
+	header.FromByteArray(temp)
+	return header
 }
 
 func (here *MmapShareMemory) WriteBytes(data []byte) error {
@@ -84,8 +120,8 @@ func (here *MmapShareMemory) WriteBytes(data []byte) error {
 		return errors.New("no enough space")
 	}
 	for i := 0; i < len(data); i++ {
-		*(*byte)(unsafe.Pointer(here.dataPtr)) = data[i]
-		here.dataPtr += 1
+		here.defaultPtr[i] = data[i]
+		here.startPtr += 1
 	}
 	here.size += len(data)
 	return nil
@@ -97,18 +133,21 @@ func (here *MmapShareMemory) ReadBytes(len int) []byte {
 	} else if here.size == 0 {
 		return make([]byte, 0)
 	}
+	fmt.Println(here.size)
 	ansLen := util.IntMin(len, here.size)
 	ans := make([]byte, ansLen)
+	here.startPtr = uintptr(unsafe.Pointer(&here.defaultPtr[0]))
 	for i := 0; i < ansLen; i++ {
-		ans[i] = *(*byte)(unsafe.Pointer(here.dataPtr))
+		ans[i] = *(*byte)(unsafe.Pointer(here.startPtr))
+		here.startPtr += 1
 	}
-	return nil
+	return ans
 }
 
 func (here *MmapShareMemory) Reset() {
 	if here.file != nil {
 		return
 	}
-	here.dataPtr = uintptr(unsafe.Pointer(&here.defaultPtr[0]))
+	here.startPtr = uintptr(unsafe.Pointer(&here.defaultPtr[0]))
 	here.size = 0
 }

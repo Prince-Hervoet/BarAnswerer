@@ -12,13 +12,6 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-const (
-	CLIENT_ONLY  = 0
-	SERVER_ONLY  = 1
-	DUPLEX       = 2
-	_EVENTS_SIZE = 1024
-)
-
 type Pioneer struct {
 	connections []*Connection
 	id          byte
@@ -40,7 +33,7 @@ func (here *Pioneer) NetInit(selection byte) (bool, error) {
 
 		//初始化map和event数组
 		here.epoll.mp = make(map[int32]func())
-		here.epoll.events = make([]unix.EpollEvent, _EVENTS_SIZE)
+		here.epoll.events = make([]unix.EpollEvent, util.EVENTS_SIZE)
 		here.epoll.AddEvent(int32(here.listenFd), test)
 
 		go here.epollThread()
@@ -151,4 +144,8 @@ func (here *Pioneer) epollThread() {
 		}
 	}
 
+}
+
+func (here *Pioneer) Handshake(address string) (*Visit, error) {
+	return nil, nil
 }

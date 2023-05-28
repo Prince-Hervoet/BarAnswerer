@@ -2,21 +2,23 @@ package main
 
 import (
 	"ShareMemTCP/core"
+	memory "ShareMemTCP/memory"
 	"fmt"
 	"time"
 )
 
 func main() {
-
+	s := &core.Sharer{}
+	s.Open("asdf")
 }
 
 func test1() {
-	sm, _, err := core.OpenShareMemory(4096)
+	sm, _, err := memory.OpenShareMemory(4096)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	test := make([]byte, 10)
+	test := make([]byte, 1)
 	for i := 0; i < len(test); i++ {
 		test[i] = byte(i)
 	}
@@ -29,5 +31,5 @@ func test1() {
 }
 
 func test2() {
-	core.GetShareMemory(1, 4096)
+	memory.GetShareMemory(1, 4096)
 }
