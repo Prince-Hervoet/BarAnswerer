@@ -42,23 +42,6 @@ func (here *Pioneer) NetInit(selection byte) (bool, error) {
 	return true, nil
 }
 
-// 打开连接
-func (here *Pioneer) OpenConnection(address string) (int64, error) {
-	conn, err := net.Dial("tcp", address)
-	if err != nil {
-		fmt.Println("error connecting")
-		return -1, err
-	}
-	id := util.NextId()
-	nc := &Connection{
-		OpenTimestamp: time.Now().UnixMilli(),
-		ConnectionId:  id,
-		Conn:          conn,
-	}
-	here.connections = append(here.connections, nc)
-	return id, nil
-}
-
 func (here *Pioneer) Listen(port string) (bool, error) {
 	// 监听端口
 
@@ -79,15 +62,6 @@ func (here *Pioneer) Listen(port string) (bool, error) {
 	return true, nil
 }
 
-// 检查连接
-func (here *Pioneer) CheckConnection() {
-
-}
-
-// 关闭连接
-func (here *Pioneer) CloseConnection(which int) {
-	here.connections[which].Conn.Close()
-}
 
 // 创造epoll并保存到结构体中
 func (here *EpollInfo) creatEpoll() {
@@ -148,4 +122,36 @@ func (here *Pioneer) epollThread() {
 
 func (here *Pioneer) Handshake(address string) (*Visit, error) {
 	return nil, nil
+}
+
+// 打开连接
+func (here *Pioneer) OpenConnection(address string) (int64, error) {
+	conn, err := net.Dial("tcp", address)
+	if err != nil {
+		fmt.Println("error connecting")
+		return -1, err
+	}
+	id := util.NextId()
+	nc := &Connection{
+		OpenTimestamp: time.Now().UnixMilli(),
+		ConnectionId:  id,
+		Conn:          conn,
+	}
+	here.connections = append(here.connections, nc)
+
+	
+	
+	return id, nil
+}
+
+// 检查连接
+func (here *Pioneer) CheckConnection() {
+
+}
+
+// 关闭连接
+func (here *Pioneer) CloseConnection(which int) {
+
+	//断开tcp连接
+	here.connections[which].Conn.Close()
 }
