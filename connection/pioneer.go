@@ -146,6 +146,6 @@ func (here *Pioneer) epollThread() {
 
 }
 
-func (here *Pioneer) Handshake(address string) (*Visit, error) {
+func (here *Pioneer) Handshake(address string) (*Session, error) {
 	return nil, nil
 }
