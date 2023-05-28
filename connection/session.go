@@ -1,6 +1,6 @@
 package connection
 
-type Visit struct {
+type Session struct {
 	identity int
 	pidOne   string
 	pidTwo   string

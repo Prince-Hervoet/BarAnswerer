@@ -2,13 +2,21 @@ package protocol
 
 import "ShareMemTCP/util"
 
-type MemoryHeaderProtocol struct {
+type MemoryHeader struct {
 	Flag int8
 	Head int32
 	Tail int32
 }
 
-func (here *MemoryHeaderProtocol) FromByteArray(data []byte) {
+func NewMemoryHeader(flag int8, head, tail int32) *MemoryHeader {
+	return &MemoryHeader{
+		Flag: flag,
+		Head: head,
+		Tail: tail,
+	}
+}
+
+func (here *MemoryHeader) FromByteArray(data []byte) {
 	if len(data) < 9 {
 		return
 	}
@@ -19,7 +27,7 @@ func (here *MemoryHeaderProtocol) FromByteArray(data []byte) {
 	here.Tail = util.BinaryArrayToInt32(bs)
 }
 
-func (here *MemoryHeaderProtocol) ToByteArray() []byte {
+func (here *MemoryHeader) ToByteArray() []byte {
 	ans := make([]byte, 9)
 	ans[0] = byte(here.Flag)
 	bs := util.Int32ToBinaryArray(here.Head)
