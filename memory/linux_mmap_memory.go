@@ -71,7 +71,7 @@ func (here *MmapShareMemory) RunMmap() error {
 	return nil
 }
 
-// 设置内部文件的大小，不能太大
+// 设置内部文件的大小
 func (here *MmapShareMemory) Grow(size int) {
 	if info, _ := here.file.Stat(); info.Size() >= int64(size) {
 		return
@@ -108,11 +108,19 @@ func (here *MmapShareMemory) CancelMmap() error {
 	return nil
 }
 
+// 获取共享内存协议头部
 func (here *MmapShareMemory) ReadHeader() *protocol.MemoryHeaderProtocol {
 	header := &protocol.MemoryHeaderProtocol{}
 	temp := here.defaultPtr[0:10]
 	header.FromByteArray(temp)
 	return header
+}
+
+func (here *MmapShareMemory) WriteHeader(header *protocol.MemoryHeaderProtocol) {
+	ans := header.ToByteArray()
+	for i := 0; i < len(ans); i++ {
+		here.defaultPtr[i] = ans[i]
+	}
 }
 
 func (here *MmapShareMemory) WriteBytes(data []byte) error {
@@ -144,6 +152,7 @@ func (here *MmapShareMemory) ReadBytes(len int) []byte {
 	return ans
 }
 
+// 重置共享内存区域，会清空所有数据
 func (here *MmapShareMemory) Reset() {
 	if here.file != nil {
 		return
