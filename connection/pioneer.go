@@ -19,22 +19,19 @@ type Pioneer struct {
 	listenFd    int
 }
 
-func test() {
-	fmt.Println("ce")
-}
 
-func (here *Pioneer) NetInit(selection byte) (bool, error) {
+func (here *Pioneer) ConnectInit(selection byte, port string) (bool, error) {
 	here.id = selection
 	//如果是需要接收数据的话
 	if selection > 0 {
 		here.epoll = &EpollInfo{}
 		here.epoll.creatEpoll()
-		here.Listen(":20000")
+		here.Listen(port)
 
 		//初始化map和event数组
 		here.epoll.mp = make(map[int32]func())
 		here.epoll.events = make([]unix.EpollEvent, util.EVENTS_SIZE)
-		here.epoll.AddEvent(int32(here.listenFd), test)
+		here.epoll.AddEvent(int32(here.listenFd), func() {})
 
 		go here.epollThread()
 	}
@@ -126,6 +123,7 @@ func (here *Pioneer) Handshake(address string) (*Session, error) {
 
 // 打开连接
 func (here *Pioneer) OpenConnection(address string) (int64, error) {
+	//tcp连接建立
 	conn, err := net.Dial("tcp", address)
 	if err != nil {
 		fmt.Println("error connecting")
@@ -139,7 +137,7 @@ func (here *Pioneer) OpenConnection(address string) (int64, error) {
 	}
 	here.connections = append(here.connections, nc)
 
-	
+	//共享内存协议栈
 	
 	return id, nil
 }
