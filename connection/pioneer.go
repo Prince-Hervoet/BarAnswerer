@@ -32,60 +32,7 @@ func (here *Pioneer) ConnectInit(selection byte, port string) (bool, error) {
 	return true, nil
 }
 
-// 创造epoll并保存到结构体中
-func (here *EpollInfo) creatEpoll() {
-	var err error
-	here.EpollFd, err = unix.EpollCreate1(unix.EPOLL_CLOEXEC)
-	if err != nil {
-		return
-	}
-	//初始化map和event数组
-	here.mp = make(map[int32]func([]byte, int))
-	here.events = make([]unix.EpollEvent, util.EVENTS_SIZE)
-}
-
-// epoll添加新事件
-func (here *EpollInfo) AddEvent(fd int32, function func([]byte, int)) (bool, error) {
-	// 添加文件描述符到 epoll 实例并监听可读事件
-	var event unix.EpollEvent
-	event.Events = unix.EPOLLIN
-	event.Fd = fd // 文件描述符
-	if err := unix.EpollCtl(here.EpollFd, unix.EPOLL_CTL_ADD, int(fd), &event); err != nil {
-		fmt.Printf("Error adding file descriptor to epoll instance: %v\n", err)
-		unix.Close(here.EpollFd)
-		return false, errors.New("add epoll event fail")
-	}
-	here.mp[fd] = function
-	return true, nil
-}
-
-func (here *EpollInfo) DeleteEvent(fd int32) (bool, error) {
-
-	if err := unix.EpollCtl(here.EpollFd, unix.EPOLL_CTL_DEL, int(fd), nil); err != nil {
-		fmt.Printf("Error delete file descriptor to epoll instance: %v\n", err)
-		unix.Close(here.EpollFd)
-		return false, errors.New("delete epoll event fail")
-	}
-
-	delete(here.mp, fd)
-	return true, nil
-}
-
-func (here *Pioneer) memShareTcpDeal(buf []byte, fd int) {
-	//fmt.Println(buf)
-	if buf[0] == util.MAGIC_NUMBER && buf[1] == util.VERSION {
-		//fmt.Println("rev frame")
-		s := "yes"
-		bs := []byte(s)
-		//初始化共享内存
-
-		//init_mem()
-
-		fmt.Printf("deal fd:%d\n", fd)
-		unix.Write(fd, bs)
-	}
-}
-
+// 监听线程tcp连接线程
 func (here *Pioneer) Listen(port string) {
 	// 监听端口
 	ln, err := net.Listen("tcp", port)
@@ -103,7 +50,6 @@ func (here *Pioneer) Listen(port string) {
 
 	fmt.Printf("TCP server is listening on port %s, listen fd:%d\n", port, file.Fd())
 
-	//buf := make([]byte, 4)
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
@@ -114,29 +60,24 @@ func (here *Pioneer) Listen(port string) {
 		if err != nil {
 			continue
 		}
-		//unix.Read(int(fd.Fd()), buf)
-		//fmt.Println(buf)
+
 		here.epoll.AddEvent(int32(fd.Fd()), here.memShareTcpDeal)
 	}
 }
 
-func (here *Pioneer) epollThread() {
-	buf := make([]byte, 1024)
-	for {
-		// 等待事件发生
-		n, err := unix.EpollWait(here.epoll.EpollFd, here.epoll.events, -1)
-		if err != nil {
-			fmt.Printf("Error waiting for events: %v\n", err)
-			unix.Close(here.epoll.EpollFd)
-			return
-		}
-		defer unix.Close(here.epoll.EpollFd)
+// 握手函数
+func (here *Pioneer) memShareTcpDeal(buf []byte, fd int) {
 
-		// 处理事件
-		for i := 0; i < n; i++ {
-			fd := here.epoll.events[i].Fd
-			unix.Read(int(fd), buf)
-			(here.epoll.mp[fd])(buf, int(fd)) //调用绑定的函数
+	if buf[0] == util.MAGIC_NUMBER && buf[1] == util.VERSION {
+		s := util.SHACK_RESPONSE
+		bs := []byte(s)
+		//初始化共享内存
+
+		//init_mem()
+
+		n, err := unix.Write(fd, bs)
+		if err != nil {
+			fmt.Printf("tcp shake two fail with n = %d\n", n)
 		}
 	}
 }
@@ -158,10 +99,21 @@ func (here *Pioneer) OpenConnection(port string, size int32) (int64, error) {
 
 	here.SheckHand(port, size, conn)
 
-	here.connections = append(here.connections, nc)
+	i := 0
+	for ; i < len(here.connections); i++ {
+		if here.connections[i] == nil {
+			here.connections[i] = nc
+			break
+		}
+	}
+	if i >= len(here.connections) {
+		here.connections = append(here.connections, nc)
+	}
+
 	return id, nil
 }
 
+// tcp连接之后的协议栈握手
 func (here *Pioneer) SheckHand(port string, size int32, conn net.Conn) (bool, error) {
 	//共享内存协议栈
 	initpro := protocol.InitProtocolPayload{}
@@ -181,7 +133,8 @@ func (here *Pioneer) SheckHand(port string, size int32, conn net.Conn) (bool, er
 	//等待服务端初始化完成
 	readBuf := make([]byte, 32)
 	conn.Read(readBuf)
-	str := string(readBuf)
+	str := string(readBuf[0:3])
+
 	if str != util.SHACK_RESPONSE {
 		fmt.Println("memTcp response error")
 		return false, errors.New("memTcp response error")
@@ -200,4 +153,5 @@ func (here *Pioneer) CloseConnection(which int) {
 
 	//断开tcp连接
 	here.connections[which].Conn.Close()
+	here.connections[which] = nil
 }

@@ -4,12 +4,12 @@ import "ShareMemTCP/connection"
 
 func test1(){
 	x := connection.Pioneer{}
-	x.ConnectInit(2,":20000")
+	x.ConnectInit(2,":20001")
 }
 
 func test2(){
 	x := connection.Pioneer{}
-	x.OpenConnection(":20000", 4096)
+	x.OpenConnection(":20001", 4096)
 }
 
 func main() {
