@@ -3,6 +3,7 @@ package util
 const (
 	// init magic number
 	MAGIC_NUMBER = 101
+	VERSION = 0
 
 	// net
 	NET_TYPE_REQUEST = 1
@@ -27,4 +28,7 @@ const (
 	TCP_CONNECTING = 0
 	MEM_INIT_REQU = 1
 	PROTOCL_OVER = 2
+
+	SHACK_RESPONSE = "yes"
+	
 )

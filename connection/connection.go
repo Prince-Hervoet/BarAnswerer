@@ -16,5 +16,5 @@ type EpollInfo struct {
 	EpollFd  int
 	EventNum int
 	events   []unix.EpollEvent
-	mp       map[int32]func()
+	mp       map[int32]func([]byte ,int)
 }
