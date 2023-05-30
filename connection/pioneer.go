@@ -1,6 +1,7 @@
 package connection
 
 import (
+	"ShareMemTCP/core"
 	"ShareMemTCP/protocol"
 	"ShareMemTCP/util"
 	"errors"
@@ -13,17 +14,25 @@ import (
 )
 
 type Pioneer struct {
-	id    byte
-	epoll *EpollInfo
+	ability byte
+	epoll   *EpollInfo
+	client  *core.ClientSharer
+	server  *core.ServerSharer
 }
 
 func (here *Pioneer) ConnectInit(selection byte, port string) (bool, error) {
-	here.id = selection
+	here.ability = selection
+
+	//初始化会话结构体
+	here.client = core.NewClientSharer()
+	here.server = core.NewServerSharer()
+
 	//如果是需要接收数据的话
 	if selection > 0 {
 		here.epoll = &EpollInfo{}
 		here.epoll.creatEpoll()
 
+		//开启监听线程与epoll处理线程
 		go here.Listen(port)
 		go here.epollThread()
 	}
@@ -124,16 +133,4 @@ func (here *Pioneer) SheckHand(port string, size int32, conn net.Conn) (bool, er
 	}
 	fmt.Println("memTcp succes")
 	return true, nil
-}
-
-// 检查连接
-func (here *Pioneer) CheckConnection() {
-
-}
-
-// 关闭连接
-func (here *Pioneer) CloseConnection(which int) {
-
-	//断开tcp连接
-
 }

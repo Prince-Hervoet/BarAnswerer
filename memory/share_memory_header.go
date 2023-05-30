@@ -11,7 +11,7 @@ type ShareMemoryHeader struct {
 }
 
 func (here *ShareMemoryHeader) FromBytes(data []byte) {
-	if len(data) < SHARE_MEMORY_HEADER_SIZE {
+	if len(data) < util.SHARE_MEMORY_HEADER_SIZE {
 		return
 	}
 	here.status = int8(data[0])
