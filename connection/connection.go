@@ -6,6 +6,6 @@ import (
 
 type Connection struct {
 	OpenTimestamp int64
-	ConnectionId  int64
+	ConnectionId  string
 	Conn          net.Conn
 }

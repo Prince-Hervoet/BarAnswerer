@@ -9,6 +9,7 @@ import (
 	"net"
 	"time"
 
+	gonanoid "github.com/matoous/go-nanoid/v2"
 	"golang.org/x/sys/unix"
 )
 
@@ -83,14 +84,14 @@ func (here *Pioneer) memShareTcpDeal(buf []byte, fd int) {
 }
 
 // 打开连接
-func (here *Pioneer) OpenConnection(port string, size int32) (int64, error) {
+func (here *Pioneer) OpenConnection(port string, size int32) (string, error) {
 	//tcp连接建立
 	conn, err := net.Dial("tcp", port)
 	if err != nil {
 		fmt.Println("error connecting")
-		return -1, err
+		return "", err
 	}
-	id := util.NextId()
+	id, _ := gonanoid.New()
 	nc := &Connection{
 		OpenTimestamp: time.Now().UnixMilli(),
 		ConnectionId:  id,
