@@ -23,17 +23,15 @@ func (here *InitProtocolPayload) SetNeedSize(value int32) *InitProtocolPayload {
 	return here
 }
 
-
 func (here *InitProtocolPayload) ToByteArray() []byte {
 	ans := make([]byte, 6)
 	ans[0] = byte(here.magicNumber)
 	ans[1] = byte(here.version)
-	bs := util.Int32ToBinaryArray(here.needSize)
+	bs := util.Int32ToBytes(here.needSize)
 
 	for i := 2; i < 6; i++ {
 		ans[i] = bs[i-2]
 	}
-
 
 	return ans
 }
