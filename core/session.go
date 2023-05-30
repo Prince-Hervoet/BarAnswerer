@@ -12,12 +12,11 @@ type Session struct {
 	connection     net.Conn
 	mapping        *memory.ShareMemory
 	data           map[string]any
-	waitQueue      chan []byte
 	startTimestamp int64
 }
 
 type InitSession struct {
-	addr            *net.UDPAddr
+	Addr            *net.TCPAddr
 	HandshakeStatus int8
 }
 
@@ -28,7 +27,6 @@ func NewSession(key int64, address *Address, mapping *memory.ShareMemory, connec
 		connection:     connection,
 		mapping:        mapping,
 		data:           make(map[string]any),
-		waitQueue:      make(chan []byte, 64),
 		startTimestamp: time.Now().UnixMilli(),
 	}
 }

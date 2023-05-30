@@ -3,7 +3,7 @@ package util
 const (
 	// init magic number
 	MAGIC_NUMBER = 101
-	VERSION = 0
+	VERSION = 1
 
 	// net
 	NET_TYPE_REQUEST = 1
@@ -17,8 +17,10 @@ const (
 	MEM_FLAG_COMMON  = 0
 	MEM_HEADER_SIZE  = 9
 
-	CLIENT = 0
-	SERVER = 1
+	FILE_NAME_SUFFIX = ".txt"
+	NONE             = 0
+	CLIENT           = 1
+	SERVER           = 2
 
 	CLIENT_ONLY = 0
 	SERVER_ONLY = 1

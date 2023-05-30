@@ -1,13 +1,5 @@
 package core
 
-const (
-	VERSION           = 1
-	MAGIC_NUMBER      = int16(178)
-	MESSAGE_TYPE_INIT = 1
-	MESSAGE_TYPE_DATA = 2
-	MESSAGE_TYPE_QUIT = 3
-)
-
 type Address struct {
 	Ip   string
 	Port int
