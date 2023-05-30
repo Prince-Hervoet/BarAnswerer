@@ -7,16 +7,14 @@ import (
 
 	"fmt"
 	"net"
-	"time"
 
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"golang.org/x/sys/unix"
 )
 
 type Pioneer struct {
-	connections []*Connection
-	id          byte
-	epoll       *EpollInfo
+	id    byte
+	epoll *EpollInfo
 }
 
 func (here *Pioneer) ConnectInit(selection byte, port string) (bool, error) {
@@ -92,24 +90,8 @@ func (here *Pioneer) OpenConnection(port string, size int32) (string, error) {
 		return "", err
 	}
 	id, _ := gonanoid.New()
-	nc := &Connection{
-		OpenTimestamp: time.Now().UnixMilli(),
-		ConnectionId:  id,
-		Conn:          conn,
-	}
 
 	here.SheckHand(port, size, conn)
-
-	i := 0
-	for ; i < len(here.connections); i++ {
-		if here.connections[i] == nil {
-			here.connections[i] = nc
-			break
-		}
-	}
-	if i >= len(here.connections) {
-		here.connections = append(here.connections, nc)
-	}
 
 	return id, nil
 }
@@ -153,6 +135,5 @@ func (here *Pioneer) CheckConnection() {
 func (here *Pioneer) CloseConnection(which int) {
 
 	//断开tcp连接
-	here.connections[which].Conn.Close()
-	here.connections[which] = nil
+
 }

@@ -9,7 +9,9 @@ import (
 )
 
 const (
-	DEFAULT_FILE_DIR         = "/tmp/share/"
+	// 共享内存文件的路径
+	DEFAULT_FILE_DIR = "/tmp/share/"
+	// 共享内存头部大小
 	SHARE_MEMORY_HEADER_SIZE = 17
 
 	REPLY      = 2
@@ -25,6 +27,7 @@ type ShareMemory struct {
 	header   *ShareMemoryHeader
 }
 
+// 开启一块共享内存数据结构（并没有分配共享内存）
 func OpenShareMemory() *ShareMemory {
 	return &ShareMemory{
 		filePath: "",
@@ -34,6 +37,7 @@ func OpenShareMemory() *ShareMemory {
 	}
 }
 
+// 创建系统文件并进行mmap映射内存
 func (here *ShareMemory) OpenFile(fileName string, cap int32) (string, error) {
 	if here.isOpened {
 		return "", errors.New("a mapping has been established")
@@ -67,6 +71,7 @@ func (here *ShareMemory) OpenFile(fileName string, cap int32) (string, error) {
 	return finalPath, nil
 }
 
+// 链接映射已经存在的系统文件
 func (here *ShareMemory) LinkFile(filePath string, cap int32) error {
 	if here.isOpened {
 		return errors.New("a mapping has been established")
