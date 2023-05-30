@@ -19,7 +19,7 @@ func (here *ShareProtocol) ToByteArray() []byte {
 	ans := make([]byte, 0)
 	b1 := byte(here.MagicNumber)
 	b2 := byte(here.MessageType)
-	b3 := util.Int32ToBinaryArray(here.PayloadSize)
+	b3 := util.Int32ToBytes(here.PayloadSize)
 	ans = append(ans, b1, b2)
 	for i := 0; i < 4; i++ {
 		ans = append(ans, b3[i])
@@ -38,7 +38,7 @@ func (here *ShareProtocol) FromByteArray(data []byte) {
 	here.MessageType = int8(v2)
 
 	v3 := data[2:6]
-	here.PayloadSize = util.BinaryArrayToInt32(v3)
+	here.PayloadSize = util.BytesToInt32(v3)
 
 	here.Payload = data[6:]
 }
