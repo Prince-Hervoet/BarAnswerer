@@ -2,6 +2,16 @@ package util
 
 import "encoding/binary"
 
+func BytesToInt16(data []byte) int16 {
+	return int16(binary.BigEndian.Uint16(data))
+}
+
+func Int16ToBytes(num int16) []byte {
+	ans := make([]byte, 4)
+	binary.BigEndian.PutUint16(ans, uint16(num))
+	return ans
+}
+
 func BytesToInt32(data []byte) int32 {
 	return int32(binary.BigEndian.Uint32(data))
 }

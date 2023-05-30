@@ -1,29 +1,93 @@
 package core
 
-type Address struct {
-	Ip   string
-	Port string
-}
+import (
+	"ShareMemTCP/util"
+)
 
-type Message struct {
-	Header  *MessageHeader
-	Payload any
-}
+/*
+//dived 分隔符值为'\n'
 
+	type ClinetMessageShakeHand struct {
+		Header MessageHeader
+		cap    int
+	}
+
+	type ServerMessageShakeHand struct {
+		Header    MessageHeader
+		sessionId string
+		dived0     byte
+		filePath  string
+		dived1     byte
+	}
+
+	type ClinetMessageWaveHand struct {
+		Header MessageHeader
+		sessionId string
+		dived0     byte
+		filePath  string
+		dived1     byte
+	}
+
+	type ServerMessageWaveHand struct {
+		Header    MessageHeader
+		sessionId string
+		dived0     byte
+		filePath  string
+		dived1     byte
+	}
+
+	type ClinetMessageNotice struct {
+		Header MessageHeader
+	}
+
+	type ServerMessageNotice struct {
+		Header    MessageHeader
+	}
+*/
 type MessageHeader struct {
-	MagicNumber int16
+	MagicNumber int8
 	Version     int8
+	CletOrSev   int8
 	MessageType int8
+	PayLoadLen  int16
 }
 
-type FirstBody struct {
-	Header  *MessageHeader
-	NeedCap int32
-	Key     int64
+func CreateMessage(clientOrServer int8, MessageType int8, payLode []byte) []byte {
+	offset := 0
+	ans := make([]byte, 6)
+	ans[offset] = util.MAGIC_NUMBER
+	offset++
+	ans[offset] = util.VERSION
+	offset++
+	ans[offset] = byte(clientOrServer)
+	offset++
+	ans[offset] = byte(MessageType)
+	offset++
+	if payLode != nil {
+		tmp := util.Int16ToBytes(int16(len(payLode)))
+		ans[offset] = tmp[0]
+		offset++
+		ans[offset] = tmp[0]
+		ans = append(ans, payLode...)
+	}
+	return ans
 }
 
-type SecondBody struct {
-	Header   *MessageHeader
-	FilePath string
-	Cap      int32
+func ReadHeader(message []byte, targetMgeType int8, targetSide int8) ([]byte, int16, error) {
+	if message[0] != util.MAGIC_NUMBER {
+		return nil, 0, nil
+	}
+	if message[1] != util.MAGIC_NUMBER {
+		return nil, 0, nil
+	}
+	if message[2] != byte(targetSide) {
+		return nil, 0, nil
+	}
+	if message[3] != byte(targetMgeType) {
+		return nil, 0, nil
+	}
+	paylen := message[5:7]
+	size := util.BytesToInt16(paylen)
+	data := message[6:6+size]
+	return data, size, nil
 }
