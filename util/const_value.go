@@ -22,11 +22,19 @@ const (
 	CLIENT           = 1
 	SERVER           = 2
 
+	DEFAULT_FILE_DIR = "/tmp/share/"
+	SHARE_MEMORY_HEADER_SIZE = 17
+
+	REPLY      = 2
+	WORKING    = 1
+	NO_WORKING = 0
+
 	CLIENT_ONLY = 0
 	SERVER_ONLY = 1
 	DUPLEX      = 2
 	EVENTS_SIZE = 1024
 	
+
 	TCP_CONNECTING = 0
 	MEM_INIT_REQU = 1
 	PROTOCL_OVER = 2

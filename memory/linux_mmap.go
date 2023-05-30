@@ -8,16 +8,6 @@ import (
 	"syscall"
 )
 
-const (
-	// 共享内存文件的路径
-	DEFAULT_FILE_DIR = "/tmp/share/"
-	// 共享内存头部大小
-	SHARE_MEMORY_HEADER_SIZE = 17
-
-	REPLY      = 2
-	WORKING    = 1
-	NO_WORKING = 0
-)
 
 type ShareMemory struct {
 	filePath string
@@ -27,7 +17,6 @@ type ShareMemory struct {
 	header   *ShareMemoryHeader
 }
 
-// 开启一块共享内存数据结构（并没有分配共享内存）
 func OpenShareMemory() *ShareMemory {
 	return &ShareMemory{
 		filePath: "",
@@ -37,14 +26,14 @@ func OpenShareMemory() *ShareMemory {
 	}
 }
 
-// 创建系统文件并进行mmap映射内存
+
 func (here *ShareMemory) OpenFile(fileName string, cap int32) (string, error) {
 	if here.isOpened {
 		return "", errors.New("a mapping has been established")
-	} else if cap <= SHARE_MEMORY_HEADER_SIZE {
+	} else if cap <= util.SHARE_MEMORY_HEADER_SIZE {
 		return "", errors.New("cap is too small")
 	}
-	finalPath := DEFAULT_FILE_DIR + fileName
+	finalPath := util.DEFAULT_FILE_DIR + fileName
 	filePtr, err := os.OpenFile(finalPath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0666)
 	if err != nil {
 		fmt.Println("open file error")
@@ -63,19 +52,19 @@ func (here *ShareMemory) OpenFile(fileName string, cap int32) (string, error) {
 	here.filePath = finalPath
 	here.isOpened = true
 	here.mapping = bs
-	here.header.size = SHARE_MEMORY_HEADER_SIZE
-	here.header.status = NO_WORKING
-	here.header.head = SHARE_MEMORY_HEADER_SIZE + 1
-	here.header.tail = SHARE_MEMORY_HEADER_SIZE + 1
+	here.header.size = util.SHARE_MEMORY_HEADER_SIZE
+	here.header.status = util.NO_WORKING
+	here.header.head = util.SHARE_MEMORY_HEADER_SIZE + 1
+	here.header.tail = util.SHARE_MEMORY_HEADER_SIZE + 1
 	here.writeHeader()
 	return finalPath, nil
 }
 
-// 链接映射已经存在的系统文件
+// ????????????????????
 func (here *ShareMemory) LinkFile(filePath string, cap int32) error {
 	if here.isOpened {
 		return errors.New("a mapping has been established")
-	} else if cap <= SHARE_MEMORY_HEADER_SIZE {
+	} else if cap <= util.SHARE_MEMORY_HEADER_SIZE {
 		return errors.New("cap is too small")
 	}
 	filePtr, err := os.OpenFile(filePath, os.O_RDWR, 0666)
@@ -118,7 +107,7 @@ func (here *ShareMemory) Close() error {
 	here.isOpened = false
 	here.header.cap = 0
 	here.header.size = 0
-	here.header.status = NO_WORKING
+	here.header.status = util.NO_WORKING
 	here.header.head = 0
 	here.header.tail = 0
 	return nil
@@ -135,7 +124,7 @@ func (here *ShareMemory) Write(data []byte) error {
 	for i := 0; i < len(data); i++ {
 		here.mapping[tail] = data[i]
 		if tail == here.header.cap-1 {
-			tail = SHARE_MEMORY_HEADER_SIZE + 1
+			tail = util.SHARE_MEMORY_HEADER_SIZE + 1
 		} else {
 			tail += 1
 		}
@@ -162,7 +151,7 @@ func (here *ShareMemory) Read(bs []byte) (int32, error) {
 	for i := 0; i < ansLen; i++ {
 		bs[i] = here.mapping[head]
 		if head == here.header.cap-1 {
-			head = SHARE_MEMORY_HEADER_SIZE + 1
+			head = util.SHARE_MEMORY_HEADER_SIZE + 1
 		} else {
 			head += 1
 		}
@@ -211,7 +200,7 @@ func (here *ShareMemory) readHeader() {
 	if !here.isOpened {
 		return
 	}
-	temp := here.mapping[0 : SHARE_MEMORY_HEADER_SIZE+1]
+	temp := here.mapping[0 : util.SHARE_MEMORY_HEADER_SIZE+1]
 	here.header.FromBytes(temp)
 }
 

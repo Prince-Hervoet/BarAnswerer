@@ -2,7 +2,7 @@ package core
 
 type Address struct {
 	Ip   string
-	Port int
+	Port string
 }
 
 type Message struct {
