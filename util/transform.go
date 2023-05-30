@@ -12,6 +12,16 @@ func Int32ToBytes(num int32) []byte {
 	return ans
 }
 
+func Int64ToBytes(number int64) []byte {
+	ans := make([]byte, 8)
+	binary.BigEndian.PutUint64(ans, uint64(number))
+	return ans
+}
+
+func BytesToInt64(data []byte) int64 {
+	return int64(binary.BigEndian.Uint64(data))
+}
+
 func Int32Min(a, b int32) int32 {
 	if a > b {
 		return b
