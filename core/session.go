@@ -7,8 +7,8 @@ import (
 )
 
 type Session struct {
-	key            int64
-	address        *Address
+	sessionId      string
+	port           int
 	connection     net.Conn
 	mapping        *memory.ShareMemory
 	data           map[string]any
@@ -20,10 +20,10 @@ type InitSession struct {
 	HandshakeStatus int8
 }
 
-func NewSession(key int64, address *Address, mapping *memory.ShareMemory, connection net.Conn) *Session {
+func NewSession(sessionId string, port int, mapping *memory.ShareMemory, connection net.Conn) *Session {
 	return &Session{
-		key:            key,
-		address:        address,
+		sessionId:      sessionId,
+		port:           port,
 		connection:     connection,
 		mapping:        mapping,
 		data:           make(map[string]any),
