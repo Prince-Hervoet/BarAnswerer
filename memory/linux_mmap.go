@@ -1,7 +1,7 @@
 package memory
 
 import (
-	"SharerMemTCP/util"
+	"ShareMemTCP/util"
 	"errors"
 	"fmt"
 	"os"
