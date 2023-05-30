@@ -77,7 +77,7 @@ func (here *ClientSharer) sheckHand(cap int32, conn net.Conn) (string, string, e
 	var sessionId string
 	var filePath string
 	lastIndex := 0
-	data, PayLoadLen, _ := ReadHeader(readMessege, util.SHACK_HAND_MESSAGE, util.SERVER)
+	data, PayLoadLen, _ := ReadMessege(readMessege, util.SHACK_HAND_MESSAGE, util.SERVER)
 	for i := 0; i < int(PayLoadLen); i++ {
 		if data[i] == '\n' {
 			if len(sessionId) > 0 {

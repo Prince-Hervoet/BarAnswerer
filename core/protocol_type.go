@@ -2,6 +2,7 @@ package core
 
 import (
 	"ShareMemTCP/util"
+	"errors"
 )
 
 /*
@@ -73,21 +74,36 @@ func CreateMessage(clientOrServer int8, MessageType int8, payLode []byte) []byte
 	return ans
 }
 
-func ReadHeader(message []byte, targetMgeType int8, targetSide int8) ([]byte, int16, error) {
+func ReadMessege(message []byte, targetMgeType int8, targetSide int8) ([]byte, int16, error) {
 	if message[0] != util.MAGIC_NUMBER {
-		return nil, 0, nil
+		return nil, 0, errors.New("param is not a messege")
 	}
 	if message[1] != util.MAGIC_NUMBER {
-		return nil, 0, nil
+		return nil, 0, errors.New("param is not a messege")
 	}
 	if message[2] != byte(targetSide) {
-		return nil, 0, nil
+		return nil, 0, errors.New("not target messege")
 	}
 	if message[3] != byte(targetMgeType) {
-		return nil, 0, nil
+		return nil, 0, errors.New("not target messege")
 	}
 	paylen := message[5:7]
 	size := util.BytesToInt16(paylen)
-	data := message[6:6+size]
+	data := message[6 : 6+size]
 	return data, size, nil
+}
+
+func ReadMessegeHeader(message []byte) (int8, int8, error) {
+	if message[0] != util.MAGIC_NUMBER {
+		return 0, 0, errors.New("param is not a messege")
+	}
+	if message[1] != util.MAGIC_NUMBER {
+		return 0, 0, errors.New("param is not a messege")
+	}
+	var side int8
+	var MessageType int8
+
+	side = int8(message[2])
+	MessageType = int8(message[3])
+	return side, MessageType, nil
 }

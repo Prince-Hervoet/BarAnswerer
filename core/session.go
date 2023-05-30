@@ -10,14 +10,10 @@ type Session struct {
 	sessionId      string
 	port           int
 	connection     net.Conn
+	fd             int
 	mapping        *memory.ShareMemory
 	data           map[string]any
 	startTimestamp int64
-}
-
-type InitSession struct {
-	Addr            *net.TCPAddr
-	HandshakeStatus int8
 }
 
 func NewSession(sessionId string, port int, mapping *memory.ShareMemory, connection net.Conn) *Session {
