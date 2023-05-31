@@ -10,6 +10,7 @@ import (
 )
 
 type ClientSharer struct {
+	SidMap    map[int]string
 	sessions  map[string]*Session
 	selection int8
 }
@@ -17,9 +18,19 @@ type ClientSharer struct {
 // 创建客户端分享者
 func NewClientSharer() *ClientSharer {
 	return &ClientSharer{
+		SidMap:    make(map[int]string),
 		sessions:  make(map[string]*Session),
 		selection: util.CLIENT,
 	}
+}
+
+func (here *ClientSharer) PushSessionMap(sessionId string, port int, mapping *memory.ShareMemory, connection net.Conn, fd int) {
+	t := NewSession(sessionId, port, mapping, connection)
+	if connection == nil {
+		t.fd = fd
+	}
+	here.SidMap[t.fd] = sessionId
+	here.sessions[sessionId] = t
 }
 
 // 链接对端进程，请求开启共享内存（传入的对端进程的地址、需要的内存大小、连接的标识）
@@ -51,8 +62,8 @@ func (here *ClientSharer) Link(port int, cap int32) (string, error) {
 		return "", err
 	}
 
-	s := NewSession(sessionId, port, shareMemory, conn)
-	here.sessions[sessionId] = s
+	here.PushSessionMap(sessionId, port, shareMemory, conn, 0)
+
 	return sessionId, nil
 }
 
@@ -81,7 +92,7 @@ func (here *ClientSharer) sheckHand(cap int32, conn net.Conn) (string, string, e
 	var filePath string
 	lastIndex := 0
 	data, PayLoadLen, _ := ReadMessege(readMessege, util.SHACK_HAND_MESSAGE, util.SERVER)
-	fmt.Println(data)
+
 	for i := 0; i < int(PayLoadLen); i++ {
 		if data[i] == '\n' {
 			if len(sessionId) > 0 {
@@ -108,18 +119,20 @@ func (here *ClientSharer) Send(data []byte, sessionId string) error {
 	}
 	session.mapping.ChangeStatus(1)
 	// 发送通知
+	//message := CreateMessage(util.CLIENT, util.NOTICE_MESSAGE, nil)
+
 	return nil
 }
 
 // 读取共享内存中数据
-func (here *ClientSharer) Read(bs []byte, sessionId string) (int32, error) {
-	if _, has := here.sessions[sessionId]; !has {
-		return 0, errors.New("invalid sessionId")
-	}
-	session := here.sessions[sessionId]
-	count, err := session.mapping.Read(bs)
-	if err != nil {
-		return 0, err
-	}
-	return count, nil
-}
+// func (here *ClientSharer) Read(bs []byte, sessionId string) (int32, error) {
+// 	if _, has := here.sessions[sessionId]; !has {
+// 		return 0, errors.New("invalid sessionId")
+// 	}
+// 	session := here.sessions[sessionId]
+// 	count, err := session.mapping.Read(bs)
+// 	if err != nil {
+// 		return 0, err
+// 	}
+// 	return count, nil
+// }

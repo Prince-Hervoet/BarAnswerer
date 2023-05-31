@@ -29,9 +29,9 @@ func (here *EpollInfo) creatEpoll() {
 
 // epoll添加新事件
 func (here *EpollInfo) AddEvent(fd int32, function func([]byte, int)) (bool, error) {
-	// 添加文件描述符到 epoll 实例并监听可读事件
+	// 添加文件描述符到 epoll 实例并监听可读或者tcp断开事件
 	var event unix.EpollEvent
-	event.Events = unix.EPOLLIN
+	event.Events = unix.EPOLLIN | unix.EPOLLHUP
 	event.Fd = fd // 文件描述符
 
 	if err := unix.EpollCtl(here.EpollFd, unix.EPOLL_CTL_ADD, int(fd), &event); err != nil {
@@ -74,9 +74,18 @@ func (here *ServerSharer) epollThread() {
 		// 处理事件
 		for i := 0; i < n; i++ {
 			fd := here.Epoll.events[i].Fd
-			x, err := unix.Read(int(fd), buf)
-			if err != nil {
-				fmt.Printf("read epoll fail whit return:%d\n", x)
+			n, err := unix.Read(int(fd), buf)
+			if n == 0 || err != nil {
+				fmt.Printf("link fd %d is over now delete it\n", fd)
+				//删除对方的client的相关对话资源
+				here.Epoll.DeleteEvent(fd)                          //移除epoll监控
+				here.sessions[here.SidMap[int(fd)]].mapping.Close() //移除共享内存映射
+				here.DeleteSession(int(fd))                         //移除session映射
+				unix.Close(int(fd))
+
+				//删除本进程的client的相关对话资源
+				
+
 				continue
 			}
 			go (here.Epoll.mp[fd])(buf, int(fd)) //调用绑定的函数

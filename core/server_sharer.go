@@ -14,6 +14,7 @@ import (
 )
 
 type ServerSharer struct {
+	SidMap    map[int]string
 	sessions  map[string]*Session
 	Epoll     *EpollInfo
 	selection int8
@@ -22,10 +23,25 @@ type ServerSharer struct {
 // 创建一个服务端分享者
 func NewServerSharer() *ServerSharer {
 	return &ServerSharer{
+		SidMap:    make(map[int]string),
 		sessions:  make(map[string]*Session),
 		Epoll:     &EpollInfo{},
 		selection: util.SERVER,
 	}
+}
+
+func (here *ServerSharer) PushSessionMap(sessionId string, port int, mapping *memory.ShareMemory, connection net.Conn, fd int) {
+	t := NewSession(sessionId, port, mapping, connection)
+	if connection == nil {
+		t.fd = fd
+	}
+	here.SidMap[t.fd] = sessionId
+	here.sessions[sessionId] = t
+}
+
+func (here *ServerSharer) DeleteSession(fd int) {
+	delete(here.sessions, here.SidMap[fd])
+	delete(here.SidMap, fd)
 }
 
 func (here *ServerSharer) SetCallback() {
@@ -134,9 +150,8 @@ func (here *ServerSharer) shakeDeal(buf []byte, fd int) {
 	fileName, _ := gonanoid.New()
 
 	id, _ := gonanoid.New()
-	t := NewSession(id, 0, sm, nil)
-	t.fd = fd
-	here.sessions[id] = t
+
+	here.PushSessionMap(id, 0, sm, nil, fd)
 
 	filePath, err := sm.OpenFile(fileName, int32(cap))
 	if err != nil {

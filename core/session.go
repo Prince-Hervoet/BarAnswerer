@@ -17,7 +17,7 @@ type Session struct {
 }
 
 func NewSession(sessionId string, port int, mapping *memory.ShareMemory, connection net.Conn) *Session {
-	return &Session{
+	ans := &Session{
 		sessionId:      sessionId,
 		port:           port,
 		connection:     connection,
@@ -25,4 +25,10 @@ func NewSession(sessionId string, port int, mapping *memory.ShareMemory, connect
 		data:           make(map[string]any),
 		startTimestamp: time.Now().UnixMilli(),
 	}
+	if connection != nil {
+		file, _ := connection.(*net.TCPConn).File()
+		ans.fd = int(file.Fd())
+	}
+
+	return ans
 }
