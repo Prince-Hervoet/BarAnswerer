@@ -101,6 +101,8 @@ func (here *ClientSharer) Send(data []byte, sessionId string) error {
 	if err != nil {
 		return err
 	}
+	session.mapping.ChangeStatus(1)
+	// 发送通知
 	return nil
 }
 

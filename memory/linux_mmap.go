@@ -8,13 +8,12 @@ import (
 	"syscall"
 )
 
-
 type ShareMemory struct {
 	filePath string
 	filePtr  *os.File
 	isOpened bool
 	mapping  []byte
-	header   *ShareMemoryHeader
+	header   ShareMemoryHeader
 }
 
 func OpenShareMemory() *ShareMemory {
@@ -22,10 +21,13 @@ func OpenShareMemory() *ShareMemory {
 		filePath: "",
 		filePtr:  nil,
 		isOpened: false,
-		header:   &ShareMemoryHeader{},
 	}
 }
 
+func (here *ShareMemory) Size() int32 {
+	here.readHeader()
+	return here.header.size
+}
 
 func (here *ShareMemory) OpenFile(fileName string, cap int32) (string, error) {
 	if here.isOpened {
@@ -60,7 +62,7 @@ func (here *ShareMemory) OpenFile(fileName string, cap int32) (string, error) {
 	return finalPath, nil
 }
 
-// ????????????????????
+// 连接已经有的文件
 func (here *ShareMemory) LinkFile(filePath string, cap int32) error {
 	if here.isOpened {
 		return errors.New("a mapping has been established")
@@ -107,7 +109,7 @@ func (here *ShareMemory) Close() error {
 	here.isOpened = false
 	here.header.cap = 0
 	here.header.size = 0
-	here.header.status = util.NO_WORKING
+	here.header.status = 0
 	here.header.head = 0
 	here.header.tail = 0
 	return nil
@@ -143,9 +145,6 @@ func (here *ShareMemory) Read(bs []byte) (int32, error) {
 	if here.header.size == 0 {
 		return 0, nil
 	}
-	// if !here.checkStatus() {
-	// 	return 0, nil
-	// }
 	ansLen := util.IntMin(len(bs), int(here.header.size))
 	head := here.header.head
 	for i := 0; i < ansLen; i++ {
