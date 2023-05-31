@@ -68,7 +68,7 @@ func CreateMessage(clientOrServer int8, MessageType int8, payLode []byte) []byte
 		tmp := util.Int16ToBytes(int16(len(payLode)))
 		ans[offset] = tmp[0]
 		offset++
-		ans[offset] = tmp[0]
+		ans[offset] = tmp[1]
 		ans = append(ans, payLode...)
 	}
 	return ans
@@ -78,7 +78,7 @@ func ReadMessege(message []byte, targetMgeType int8, targetSide int8) ([]byte, i
 	if message[0] != util.MAGIC_NUMBER {
 		return nil, 0, errors.New("param is not a messege")
 	}
-	if message[1] != util.MAGIC_NUMBER {
+	if message[1] != util.VERSION {
 		return nil, 0, errors.New("param is not a messege")
 	}
 	if message[2] != byte(targetSide) {
@@ -87,7 +87,7 @@ func ReadMessege(message []byte, targetMgeType int8, targetSide int8) ([]byte, i
 	if message[3] != byte(targetMgeType) {
 		return nil, 0, errors.New("not target messege")
 	}
-	paylen := message[5:7]
+	paylen := message[4:6]
 	size := util.BytesToInt16(paylen)
 	data := message[6 : 6+size]
 	return data, size, nil
@@ -97,7 +97,7 @@ func ReadMessegeHeader(message []byte) (int8, int8, error) {
 	if message[0] != util.MAGIC_NUMBER {
 		return 0, 0, errors.New("param is not a messege")
 	}
-	if message[1] != util.MAGIC_NUMBER {
+	if message[1] != util.VERSION {
 		return 0, 0, errors.New("param is not a messege")
 	}
 	var side int8

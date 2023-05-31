@@ -33,6 +33,7 @@ func (here *ClientSharer) Link(port int, cap int32) (string, error) {
 		return "", err1
 	}
 
+	fmt.Println("TCP connect")
 	//共享内存协议握手
 	sessionId, filePath, err2 := here.sheckHand(cap, conn)
 	if err2 != nil {
@@ -40,6 +41,7 @@ func (here *ClientSharer) Link(port int, cap int32) (string, error) {
 		conn.Close()
 		return "", err2
 	}
+	fmt.Println("client hand shake over")
 
 	shareMemory := memory.OpenShareMemory()
 	err := shareMemory.LinkFile(filePath, cap)
@@ -49,7 +51,8 @@ func (here *ClientSharer) Link(port int, cap int32) (string, error) {
 		return "", err
 	}
 
-	here.sessions[sessionId] = NewSession(sessionId, port, shareMemory, conn)
+	s := NewSession(sessionId, port, shareMemory, conn)
+	here.sessions[sessionId] = s
 	return sessionId, nil
 }
 
@@ -78,16 +81,18 @@ func (here *ClientSharer) sheckHand(cap int32, conn net.Conn) (string, string, e
 	var filePath string
 	lastIndex := 0
 	data, PayLoadLen, _ := ReadMessege(readMessege, util.SHACK_HAND_MESSAGE, util.SERVER)
+	fmt.Println(data)
 	for i := 0; i < int(PayLoadLen); i++ {
 		if data[i] == '\n' {
 			if len(sessionId) > 0 {
 				filePath = string(data[lastIndex:i])
 			} else {
-				lastIndex = i
 				sessionId = string(data[lastIndex:i])
+				lastIndex = i + 1
 			}
 		}
 	}
+	fmt.Printf("clint get seesionID:%s filePath:%s\n", sessionId, filePath)
 	return sessionId, filePath, nil
 }
 

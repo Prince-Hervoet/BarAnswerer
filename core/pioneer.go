@@ -1,35 +1,29 @@
 package core
 
-import (
-	"ShareMemTCP/util"
-)
-
 type Pioneer struct {
-	ability byte
-	client  *ClientSharer
-	server  *ServerSharer
+	Client  *ClientSharer
+	Server  *ServerSharer
 }
 
-func (here *Pioneer) ConnectInit(selection byte, port int) (bool, error) {
-	here.ability = selection
-
+func (here *Pioneer) ConnectInit(port int) (bool, error) {
 	//初始化会话结构体
-	if selection != util.SERVER {
-		here.client = NewClientSharer()
-	}
+	here.Client = NewClientSharer()
+	here.Server = NewServerSharer()
+	here.Server.Epoll.creatEpoll()
+
+	//开启监听线程与epoll处理线程
+	go here.Server.Listen(port)
+	go here.Server.epollThread()
 
 	//如果是需要接收数据的话
-	if selection > 0 {
-		here.server = NewServerSharer()
-
-		here.server.Epoll.creatEpoll()
-
-		//开启监听线程与epoll处理线程
-		go here.server.Listen(port)
-		go here.server.epollThread()
-	}
 
 	return true, nil
+}
+
+func (here *Pioneer) NewPoineer(port int)(*Pioneer){
+	t := &Pioneer{}
+	t.ConnectInit(port)
+	return t
 }
 
 // 打开连接

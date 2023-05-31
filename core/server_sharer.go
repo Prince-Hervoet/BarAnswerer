@@ -56,6 +56,7 @@ func (here *ServerSharer) Listen(port int) {
 		if err != nil {
 			continue
 		}
+		
 		fd, err := conn.(*net.TCPConn).File()
 		fmt.Printf("listen fd:%d\n", fd.Fd())
 		if err != nil {
@@ -97,9 +98,10 @@ func (here *ServerSharer) Open(port int) {
 // 客户端发送报文处理回调函数
 func (here *ServerSharer) MemShareTcpDeal(buf []byte, fd int) {
 
+	
 	side, MessageType, err := ReadMessegeHeader(buf)
 	if err != nil {
-		fmt.Println("read header error")
+		//fmt.Println("read header error")
 		return
 	}
 

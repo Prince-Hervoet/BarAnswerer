@@ -1,17 +1,20 @@
 package main
 
+import "ShareMemTCP/core"
+
 func test1() {
-	// x := connection.Pioneer{}
-	// x.ConnectInit(2,":20001")
+	x := core.Pioneer{}
+	x.ConnectInit(20000)
 }
 
 func test2() {
-	// x := connection.Pioneer{}
-	// x.OpenConnection(":20001", 4096)
+	x := core.Pioneer{}
+	x.ConnectInit(20000)
+	x.Client.Link(20000, 4096)
 }
 
 func main() {
-	test1()
+	// test1()
 	// for {
 
 	// }
