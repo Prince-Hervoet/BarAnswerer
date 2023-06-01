@@ -192,16 +192,3 @@ func (here *ClientSharer) Close(sessionId string) error {
 	here.RecoverResource(sessionId)
 	return nil
 }
-
-// 读取共享内存中数据
-// func (here *ClientSharer) Read(bs []byte, sessionId string) (int32, error) {
-// 	if _, has := here.sessions[sessionId]; !has {
-// 		return 0, errors.New("invalid sessionId")
-// 	}
-// 	session := here.sessions[sessionId]
-// 	count, err := session.mapping.Read(bs)
-// 	if err != nil {
-// 		return 0, err
-// 	}
-// 	return count, nil
-// }

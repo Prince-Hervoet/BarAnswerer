@@ -147,7 +147,6 @@ func (here *ServerSharer) MemShareTcpDeal(buf []byte, fd int) {
 	default:
 		fmt.Println("server memory share tcp error")
 	}
-
 }
 
 // epoll中处理握手的服务器函数
@@ -162,9 +161,7 @@ func (here *ServerSharer) shakeDeal(buf []byte, fd int) {
 
 	sm := memory.OpenShareMemory()
 	fileName, _ := gonanoid.New()
-
 	id, _ := gonanoid.New()
-
 	here.PushSessionMap(id, 0, sm, nil, fd)
 
 	filePath, err := sm.OpenFile(fileName, int32(cap))
@@ -173,27 +170,22 @@ func (here *ServerSharer) shakeDeal(buf []byte, fd int) {
 		here.Close(id)
 		return
 	}
-
 	str := &strings.Builder{}
 	str.WriteString(id)
 	str.WriteByte(byte('\n'))
 	str.WriteString(filePath)
 	str.WriteByte(byte('\n'))
 	payLoad := []byte(str.String())
-
 	sendBuf := CreateMessage(util.SERVER, util.SHACK_HAND_MESSAGE, payLoad)
-
 	unix.Write(fd, sendBuf)
 }
 
 // epoll中处理写通知的服务端函数
 func (here *ServerSharer) noticeDeal(buf []byte, fd int) {
-
 	sessionId := here.SidMap[fd]
 	if _, has := here.callBacks[sessionId]; has {
 		here.callBacks[sessionId](buf) //调用用户设置的回调函数
 	}
-
 	here.sessions[sessionId].mapping.ChangeStatus(0)
 	message := CreateMessage(util.CLIENT, util.NOTICE_MESSAGE, nil)
 	unix.Write(fd, message)
@@ -209,13 +201,10 @@ func (here *ServerSharer) waveHandDeal(buf []byte, fd int) {
 			sessionId = string(data[0:i])
 		}
 	}
-
 	if here.EpollIndex != nil {
 		fmt.Print("fd:")
 		fmt.Println(here.sessions[sessionId].fd)
 		here.EpollIndex.DeleteEvent(int32(here.sessions[sessionId].fd))
 	}
-
 	here.RecoverResource(sessionId)
-
 }
