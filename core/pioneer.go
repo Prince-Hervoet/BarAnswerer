@@ -27,7 +27,7 @@ func (here *Pioneer) SetCallback(sessionId string, call func([]byte)) {
 }
 
 // 写数据
-func (here *Pioneer) Write(data []byte, sessionId string) error {
+func (here *Pioneer) Send(data []byte, sessionId string) error {
 	return here.client.Send(data, sessionId)
 }
 

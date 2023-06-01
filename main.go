@@ -9,7 +9,7 @@ func test1() {
 func test2() {
 	x := core.NewPoineer(20001)
 	sid, _ := x.Link(20000, 4096)
-	x.Write([]byte("asdf"), sid)
+	x.Send([]byte("asdf"), sid)
 }
 
 func main() {
