@@ -16,15 +16,30 @@ type EpollInfo struct {
 }
 
 // 创造epoll并保存到结构体中
-func (here *EpollInfo) creatEpoll() {
+// func (here *EpollInfo) initEpoll() {
+// 	var err error
+// 	here.EpollFd, err = unix.EpollCreate1(unix.EPOLL_CLOEXEC)
+// 	if err != nil {
+// 		return
+// 	}
+// 	//初始化map和event数组
+// 	here.mp = make(map[int32]func([]byte, int))
+// 	here.events = make([]unix.EpollEvent, util.EVENTS_SIZE)
+// }
+
+// 创造epoll并保存到结构体中
+func CreatEpoll() *EpollInfo {
+	epoll := &EpollInfo{}
 	var err error
-	here.EpollFd, err = unix.EpollCreate1(unix.EPOLL_CLOEXEC)
+	epoll.EpollFd, err = unix.EpollCreate1(unix.EPOLL_CLOEXEC)
 	if err != nil {
-		return
+		return nil
 	}
+
 	//初始化map和event数组
-	here.mp = make(map[int32]func([]byte, int))
-	here.events = make([]unix.EpollEvent, util.EVENTS_SIZE)
+	epoll.mp = make(map[int32]func([]byte, int))
+	epoll.events = make([]unix.EpollEvent, util.EVENTS_SIZE)
+	return epoll
 }
 
 // epoll添加新事件
@@ -59,36 +74,39 @@ func (here *EpollInfo) DeleteEvent(fd int32) (bool, error) {
 }
 
 // epoll处理线程
-func (here *ServerSharer) epollThread() {
+func (here *Pioneer) epollThread() {
 	for {
 		buf := make([]byte, 1024)
 		// 等待事件发生
-		n, err := unix.EpollWait(here.Epoll.EpollFd, here.Epoll.events, -1)
+		n, err := unix.EpollWait(here.epoll.EpollFd, here.epoll.events, -1)
 		if err != nil {
 			fmt.Printf("Error waiting for events: %v\n", err)
-			unix.Close(here.Epoll.EpollFd)
+			unix.Close(here.epoll.EpollFd)
 			return
 		}
-		defer unix.Close(here.Epoll.EpollFd)
+		defer unix.Close(here.epoll.EpollFd)
 
 		// 处理事件
 		for i := 0; i < n; i++ {
-			fd := here.Epoll.events[i].Fd
+			fd := here.epoll.events[i].Fd
 			n, err := unix.Read(int(fd), buf)
+			//如果连接出现了问题
 			if n == 0 || err != nil {
 				fmt.Printf("link fd %d is over now delete it\n", fd)
-				//删除对方的client的相关对话资源
-				here.Epoll.DeleteEvent(fd)                          //移除epoll监控
-				here.sessions[here.SidMap[int(fd)]].mapping.Close() //移除共享内存映射
-				here.DeleteSession(int(fd))                         //移除session映射
-				unix.Close(int(fd))
 
-				//删除本进程的client的相关对话资源
-				
+				//删除相关对话资源
+				here.epoll.DeleteEvent(fd) //移除epoll监控
+				//如果是当前进程客户端连接的服务端寄了
+				if _, has := here.Client.SidMap[int(fd)]; has {
+					here.Client.RecoverResource(here.Client.SidMap[int(fd)])
+				} else {
+					here.Server.RecoverResource(here.Server.SidMap[int(fd)])
+				}
+				unix.Close(int(fd)) //关闭连接
 
 				continue
 			}
-			go (here.Epoll.mp[fd])(buf, int(fd)) //调用绑定的函数
+			go (here.epoll.mp[fd])(buf, int(fd)) //调用绑定的函数
 		}
 	}
 }

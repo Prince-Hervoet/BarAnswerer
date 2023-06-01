@@ -25,16 +25,12 @@ import (
 		Header MessageHeader
 		sessionId string
 		dived0     byte
-		filePath  string
-		dived1     byte
 	}
 
 	type ServerMessageWaveHand struct {
 		Header    MessageHeader
 		sessionId string
 		dived0     byte
-		filePath  string
-		dived1     byte
 	}
 
 	type ClinetMessageNotice struct {

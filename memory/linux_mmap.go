@@ -29,6 +29,8 @@ func (here *ShareMemory) Size() int32 {
 	return here.header.size
 }
 
+
+
 func (here *ShareMemory) OpenFile(fileName string, cap int32) (string, error) {
 	if here.isOpened {
 		return "", errors.New("a mapping has been established")

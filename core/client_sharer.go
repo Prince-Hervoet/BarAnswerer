@@ -7,12 +7,17 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"strings"
+	"time"
+
+	"golang.org/x/sys/unix"
 )
 
 type ClientSharer struct {
-	SidMap    map[int]string
-	sessions  map[string]*Session
-	selection int8
+	SidMap     map[int]string
+	sessions   map[string]*Session
+	EpollIndex *EpollInfo
+	selection  int8
 }
 
 // 创建客户端分享者
@@ -24,6 +29,18 @@ func NewClientSharer() *ClientSharer {
 	}
 }
 
+// 挂载在epoll上的客户端读取事件,在通知中会取消在epoll中的挂载
+func (here *ClientSharer) ClientMemTcpCallBack(buf []byte, Fd int) {
+
+}
+
+// 对话关闭后回收资源的函数
+func (here *ClientSharer) RecoverResource(sessionId string) {
+	here.sessions[sessionId].mapping.Close()        //移除共享内存映射
+	here.DeleteSession(here.sessions[sessionId].fd) //移除session映射
+}
+
+// 创建一个seesion并设置对应的map
 func (here *ClientSharer) PushSessionMap(sessionId string, port int, mapping *memory.ShareMemory, connection net.Conn, fd int) {
 	t := NewSession(sessionId, port, mapping, connection)
 	if connection == nil {
@@ -31,6 +48,11 @@ func (here *ClientSharer) PushSessionMap(sessionId string, port int, mapping *me
 	}
 	here.SidMap[t.fd] = sessionId
 	here.sessions[sessionId] = t
+}
+
+func (here *ClientSharer) DeleteSession(fd int) {
+	delete(here.sessions, here.SidMap[fd])
+	delete(here.SidMap, fd)
 }
 
 // 链接对端进程，请求开启共享内存（传入的对端进程的地址、需要的内存大小、连接的标识）
@@ -62,7 +84,9 @@ func (here *ClientSharer) Link(port int, cap int32) (string, error) {
 		return "", err
 	}
 
+	//保存session并添加到epoll中
 	here.PushSessionMap(sessionId, port, shareMemory, conn, 0)
+	here.EpollIndex.AddEvent(int32(here.sessions[sessionId].fd), here.ClientMemTcpCallBack)
 
 	return sessionId, nil
 }
@@ -117,10 +141,55 @@ func (here *ClientSharer) Send(data []byte, sessionId string) error {
 	if err != nil {
 		return err
 	}
-	session.mapping.ChangeStatus(1)
-	// 发送通知
-	//message := CreateMessage(util.CLIENT, util.NOTICE_MESSAGE, nil)
 
+	//向共享内存写数据
+	session.mapping.Write(data)
+	session.mapping.ChangeStatus(1)
+
+	// 发送通知
+	message := CreateMessage(util.CLIENT, util.NOTICE_MESSAGE, nil)
+	session.connection.Write(message)
+
+	// 等待服务端处理完毕,要先取下后再阻塞读取
+	here.EpollIndex.DeleteEvent(int32(here.sessions[sessionId].fd))
+
+	buf := make([]byte, 128)
+	//设置读取的截止时间
+	session.connection.SetReadDeadline(time.Now().Add(1 * time.Second))
+	session.connection.Read(buf)
+	_, _, err = ReadMessege(buf, util.NOTICE_MESSAGE, util.SERVER)
+	if err != nil {
+		here.DeleteSession(session.fd)
+		return err
+	}
+
+	here.EpollIndex.AddEvent(int32(here.sessions[sessionId].fd), here.ClientMemTcpCallBack)
+
+	return nil
+}
+
+// 关闭会话
+func (here *ClientSharer) Close(sessionId string) error {
+	if _, has := here.sessions[sessionId]; !has {
+		return errors.New("sessionId error")
+	}
+	if here.EpollIndex != nil {
+		here.EpollIndex.DeleteEvent(int32(here.sessions[sessionId].fd))
+	}
+
+	session := here.sessions[sessionId]
+
+	//传输结束报文
+	str := &strings.Builder{}
+	str.WriteString(sessionId)
+	str.WriteByte(byte('\n'))
+	payLoad := []byte(str.String())
+
+	sendBuf := CreateMessage(util.SERVER, util.SHACK_HAND_MESSAGE, payLoad)
+
+	unix.Write(session.fd, sendBuf)
+
+	here.RecoverResource(sessionId)
 	return nil
 }
 
