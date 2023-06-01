@@ -10,16 +10,15 @@ const (
 	MEM_FLAG_COMMON  = 0
 	MEM_HEADER_SIZE  = 9
 
-	FILE_NAME_SUFFIX = ".txt"
-	CLIENT           = 0
-	SERVER           = 1
-	DUPLEX           = 2
-	EVENTS_SIZE      = 1024
+	CLIENT      = 0
+	SERVER      = 1
+	DUPLEX      = 2
+	EVENTS_SIZE = 1024
 
 	DEFAULT_FILE_DIR         = "/tmp/share/"
 	SHARE_MEMORY_HEADER_SIZE = 17
 
-	RPLY      = 2
+	RPLY       = 2
 	WORKING    = 1
 	NO_WORKING = 0
 
@@ -27,5 +26,4 @@ const (
 	SHACK_HAND_MESSAGE = 0
 	WAVE_HAND_MESSAGE  = 1
 	NOTICE_MESSAGE     = 2
-
 )
