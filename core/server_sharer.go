@@ -114,8 +114,16 @@ func (here *ServerSharer) Reply(content []byte, sessionId string) error {
 	return nil
 }
 
-func (here *ServerSharer) Read() {
-
+func (here *ServerSharer) Read(buffer []byte, sessionId string) (int32, error) {
+	if _, has := here.sessions[sessionId]; !has {
+		return 0, errors.New("sessionId error")
+	}
+	session := here.sessions[sessionId]
+	count, err := session.mapping.Read(buffer)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }
 
 // 客户端发送报文处理回调函数
