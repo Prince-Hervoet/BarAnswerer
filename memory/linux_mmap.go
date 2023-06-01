@@ -29,8 +29,6 @@ func (here *ShareMemory) Size() int32 {
 	return here.header.size
 }
 
-
-
 func (here *ShareMemory) OpenFile(fileName string, cap int32) (string, error) {
 	if here.isOpened {
 		return "", errors.New("a mapping has been established")
@@ -38,6 +36,9 @@ func (here *ShareMemory) OpenFile(fileName string, cap int32) (string, error) {
 		return "", errors.New("cap is too small")
 	}
 	finalPath := util.DEFAULT_FILE_DIR + fileName
+	if !PathExists(util.DEFAULT_FILE_DIR) {
+		os.Mkdir(util.DEFAULT_FILE_DIR, os.ModePerm)
+	}
 	filePtr, err := os.OpenFile(finalPath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0666)
 	if err != nil {
 		fmt.Println("open file error")
@@ -225,4 +226,12 @@ func (here *ShareMemory) checkStatus() bool {
 		return true
 	}
 	return false
+}
+
+func PathExists(path string) bool {
+	_, err := os.Stat(path) //os.Stat获取文件信息
+	if err != nil {
+		return os.IsExist(err)
+	}
+	return true
 }
