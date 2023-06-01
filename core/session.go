@@ -29,6 +29,5 @@ func NewSession(sessionId string, port int, mapping *memory.ShareMemory, connect
 		file, _ := connection.(*net.TCPConn).File()
 		ans.fd = int(file.Fd())
 	}
-
 	return ans
 }

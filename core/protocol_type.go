@@ -5,42 +5,6 @@ import (
 	"errors"
 )
 
-/*
-//dived 分隔符值为'\n'
-
-	type ClinetMessageShakeHand struct {
-		Header MessageHeader
-		cap    int
-	}
-
-	type ServerMessageShakeHand struct {
-		Header    MessageHeader
-		sessionId string
-		dived0     byte
-		filePath  string
-		dived1     byte
-	}
-
-	type ClinetMessageWaveHand struct {
-		Header MessageHeader
-		sessionId string
-		dived0     byte
-	}
-
-	type ServerMessageWaveHand struct {
-		Header    MessageHeader
-		sessionId string
-		dived0     byte
-	}
-
-	type ClinetMessageNotice struct {
-		Header MessageHeader
-	}
-
-	type ServerMessageNotice struct {
-		Header    MessageHeader
-	}
-*/
 type MessageHeader struct {
 	MagicNumber int8
 	Version     int8
