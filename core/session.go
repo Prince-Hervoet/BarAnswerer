@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// 标识一个连接会话
 type Session struct {
 	sessionId      string
 	port           int

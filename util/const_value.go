@@ -15,6 +15,7 @@ const (
 	DUPLEX      = 2
 	EVENTS_SIZE = 1024
 
+	// memory path info
 	DEFAULT_FILE_DIR         = "/tmp/share/"
 	SHARE_MEMORY_HEADER_SIZE = 17
 
