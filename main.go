@@ -10,7 +10,8 @@ func test1() {
 func test2() {
 	x := core.Pioneer{}
 	x.ConnectInit(20001)
-	x.Client.Link(20000, 4096)
+	seesionId, _ := x.OpenConnection(20000, 4096)
+	x.Close(seesionId)
 }
 
 func main() {
@@ -19,7 +20,4 @@ func main() {
 
 	// }
 	test2()
-	for {
-
-	}
 }
