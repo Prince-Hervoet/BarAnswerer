@@ -1,27 +1,30 @@
 package core
 
 type Pioneer struct {
-	Client *ClientSharer
-	Server *ServerSharer
+	client *ClientSharer
+	server *ServerSharer
 	epoll  *EpollInfo
 }
 
-func (here *Pioneer) NewPoineer(port int) *Pioneer {
-	t := &Pioneer{}
-	t.ConnectInit(port)
-	return t
+// 打开连接
+func (here *Pioneer) Link(port int, cap int32) (string, error) {
+	sid, err := here.client.Link(port, cap)
+	if err != nil {
+		return "", err
+	}
+	return sid, nil
 }
 
-func (here *Pioneer) ConnectInit(port int) (bool, error) {
+func (here *Pioneer) connectInit(port int) (bool, error) {
 	//初始化会话结构体
 	here.epoll = CreatEpoll()
-	here.Client = NewClientSharer()
-	here.Server = NewServerSharer()
-	here.Client.EpollIndex = here.epoll
-	here.Server.EpollIndex = here.epoll
+	here.client = NewClientSharer()
+	here.server = NewServerSharer()
+	here.client.EpollIndex = here.epoll
+	here.server.EpollIndex = here.epoll
 
 	//开启监听线程与epoll处理线程
-	go here.Server.Listen(port)
+	go here.server.Listen(port)
 	go here.epollThread()
 
 	//如果是需要接收数据的话
@@ -29,23 +32,23 @@ func (here *Pioneer) ConnectInit(port int) (bool, error) {
 	return true, nil
 }
 
-// 设置服务端读取客户端的数据后的回调函数
-func (here *Pioneer) SetReadCallback(sessionId string, call func([]byte)) {
-	here.Server.callBacks[sessionId] = call
+func NewPoineer(port int) *Pioneer {
+	t := &Pioneer{}
+	t.connectInit(port)
+	return t
 }
 
-// 打开连接
-func (here *Pioneer) OpenConnection(port int, size int32) (string, error) {
-	seesionId, err := here.Client.Link(port, size)
-	return seesionId, err
+// 设置服务端读取客户端的数据后的回调函数
+func (here *Pioneer) SetCallback(sessionId string, call func([]byte)) {
+	here.server.callBacks[sessionId] = call
 }
 
 // 写数据
 func (here *Pioneer) Write(data []byte, sessionId string) error {
-	return here.Client.Send(data, sessionId)
+	return here.client.Send(data, sessionId)
 }
 
 // 关闭连接
 func (here *Pioneer) Close(sessionId string) error {
-	return here.Client.Close(sessionId)
+	return here.client.Close(sessionId)
 }

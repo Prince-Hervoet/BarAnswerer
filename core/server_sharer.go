@@ -114,8 +114,16 @@ func (here *ServerSharer) Reply(content []byte, sessionId string) error {
 	return nil
 }
 
-func (here *ServerSharer) Read() {
-
+func (here *ServerSharer) Read(buffer []byte, sessionId string) (int32, error) {
+	if _, has := here.sessions[sessionId]; !has {
+		return 0, errors.New("sessionId error")
+	}
+	session := here.sessions[sessionId]
+	count, err := session.mapping.Read(buffer)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }
 
 // 客户端发送报文处理回调函数
@@ -135,9 +143,9 @@ func (here *ServerSharer) MemShareTcpDeal(buf []byte, fd int) {
 	case util.SHACK_HAND_MESSAGE:
 		here.shakeDeal(buf, fd)
 	case util.WAVE_HAND_MESSAGE:
-		here.noticeDeal(buf, fd)
-	case util.NOTICE_MESSAGE:
 		here.waveHandDeal(buf, fd)
+	case util.NOTICE_MESSAGE:
+		here.noticeDeal(buf, fd)
 	default:
 		fmt.Println("server memory share tcp error")
 	}
@@ -205,6 +213,8 @@ func (here *ServerSharer) waveHandDeal(buf []byte, fd int) {
 	}
 
 	if here.EpollIndex != nil {
+		fmt.Print("fd:")
+		fmt.Println(here.sessions[sessionId].fd)
 		here.EpollIndex.DeleteEvent(int32(here.sessions[sessionId].fd))
 	}
 

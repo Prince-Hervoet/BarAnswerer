@@ -90,6 +90,7 @@ func (here *Pioneer) epollThread() {
 		for i := 0; i < n; i++ {
 			fd := here.epoll.events[i].Fd
 			n, err := unix.Read(int(fd), buf)
+			// fmt.Println(buf)
 			//如果连接出现了问题
 			if n == 0 || err != nil {
 				fmt.Printf("link fd %d is over now delete it\n", fd)
@@ -97,10 +98,12 @@ func (here *Pioneer) epollThread() {
 				//删除相关对话资源
 				here.epoll.DeleteEvent(fd) //移除epoll监控
 				//如果是当前进程客户端连接的服务端寄了
-				if _, has := here.Client.SidMap[int(fd)]; has {
-					here.Client.RecoverResource(here.Client.SidMap[int(fd)])
+				if _, has := here.client.SidMap[int(fd)]; has {
+					fmt.Println("client resource has relese")
+					here.client.RecoverResource(here.client.SidMap[int(fd)])
 				} else {
-					here.Server.RecoverResource(here.Server.SidMap[int(fd)])
+					fmt.Println("server resource has relese")
+					here.server.RecoverResource(here.server.SidMap[int(fd)])
 				}
 				unix.Close(int(fd)) //关闭连接
 
