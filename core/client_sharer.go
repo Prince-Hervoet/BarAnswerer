@@ -21,7 +21,7 @@ type ClientSharer struct {
 }
 
 // 创建客户端分享者
-func NewClientSharer() *ClientSharer {
+func newClientSharer() *ClientSharer {
 	return &ClientSharer{
 		SidMap:    make(map[int]string),
 		sessions:  make(map[string]*Session),

@@ -22,7 +22,7 @@ type ServerSharer struct {
 }
 
 // 创建一个服务端分享者
-func NewServerSharer() *ServerSharer {
+func newServerSharer() *ServerSharer {
 	return &ServerSharer{
 		SidMap:    make(map[int]string),
 		sessions:  make(map[string]*Session),
@@ -72,9 +72,7 @@ func (here *ServerSharer) Listen(port int) {
 		fmt.Println(err)
 		return
 	}
-
 	fmt.Printf("TCP server is listening on port %d, listen fd:%d\n", port, file.Fd())
-
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
